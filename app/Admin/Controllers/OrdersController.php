@@ -45,6 +45,12 @@ class OrdersController extends Controller
         if ($order->ship_status !== Order::SHIP_STATUS_PENDING) {
             throw new InvalidRequestException('该订单已发货');
         }
+        // 众筹订单只有在众筹成功之后发货
+        if ($order->type === Order::TYPE_CROWDFUNDING &&
+            $order->crowdfunding_status === CrowdfundingProduct::STATUS_SUCCESS) {
+            throw new InvalidRequestException('众筹订单只能在众筹成功之后发货');
+        }
+
         // Laravel 5.5 之后 validate 方法可以返回校验过的值
         $data = $this->validate($request, [
             'express_company' => ['required'],
@@ -58,7 +64,7 @@ class OrdersController extends Controller
             'ship_status' => Order::SHIP_STATUS_DELIVERED,
             // 我们在 Order 模型的 $casts 属性里指明了 ship_data 是一个数组
             // 因此这里可以直接把数组传过去
-            'ship_data'   => $data, 
+            'ship_data'   => $data,
         ]);
 
         // 返回上一页
