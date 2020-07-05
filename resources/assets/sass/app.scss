@@ -278,33 +278,30 @@ body {
     }
   }
 
-  .crowdfunding-info {
+    .properties-list {
+    border-bottom: 1px solid #e6e6e6;
     margin-bottom: 20px;
-    font-size: 14px;
-    .have-text {
-      font-size: 16px;
+    .properties-list-title {
+      padding: 5px 0;
+      color: #999;
+      font-weight: 700;
     }
-    .total-amount {
-      .symbol {
-        font-size: 20px;
+    .properties-list-body {
+      font-size: 12px;
+      padding: 5px 0;
+      list-style: none;
+      text-indent: 0;
+      li {
+        display: inline-block;
+        width: 30%;
+        overflow: hidden;
       }
-      font-size: 32px;
-    }
-    .progress {
-      height: 10px;
-      margin-bottom: 5px;
-    }
-    .progress-info {
-      font-weight: 600;
-      margin: 10px 0;
-    }
-    .current-progress {
-      color: rgb(161, 6, 224);
-    }
-    .text-red {
-      color: red;
     }
   }
+  .product-description img {
+    max-width: 100%;
+  }
+
 }
 
 .cart-index-page {
