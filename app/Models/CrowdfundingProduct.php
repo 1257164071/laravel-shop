@@ -30,7 +30,7 @@ class CrowdfundingProduct extends Model
 
     public function getPercentAttribute()
     {
-        $value = $this->attributes['total_amount'] / $this->['target_amount'];
+        $value = $this->attributes['total_amount'] / $this->attributes['target_amount'];
 
         return floatval(number_format($value * 100,'.', ''));
     }
