@@ -13,6 +13,7 @@ use Encore\Admin\Layout\Content;
 use App\Http\Controllers\Controller;
 use Encore\Admin\Controllers\ModelForm;
 use App\Http\Requests\Admin\HandleRefundRequest;
+use App\Services\OrderService;
 
 class OrdersController extends Controller
 {
@@ -104,7 +105,7 @@ class OrdersController extends Controller
         });
     }
 
-    public function handleRefund(Order $order, HandleRefundRequest $request)
+    public function handleRefund(Order $order, HandleRefundRequest $request, OrderService $orderService)
     {
         // 判断订单状态是否正确
         if ($order->refund_status !== Order::REFUND_STATUS_APPLIED) {
@@ -112,14 +113,7 @@ class OrdersController extends Controller
         }
         // 是否同意退款
         if ($request->input('agree')) {
-            // 清空拒绝退款理
-            $extra = $order->extra ?: [];
-            unset($extra['refund_disagree_reason']);
-            $order->update([
-                'extra' => $extra,
-            ]);
-            // 调用退款逻辑
-            $this->_refundOrder($order);
+            $orderService->refundOrder($order);
         } else {
             // 将拒绝退款理由放到订单的 extra 字段中
             $extra = $order->extra ?: [];
