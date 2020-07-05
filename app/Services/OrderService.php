@@ -70,7 +70,7 @@ class OrderService
             }
             // 更新订单总金额
             $order->update(['total_amount' => $totalAmount]);
-            
+
             // 将下单的商品从购物车中移除
             $skuIds = collect($items)->pluck('sku_id')->all();
             app(CartService::class)->remove($skuIds);
@@ -80,6 +80,49 @@ class OrderService
 
         // 这里我们直接使用 dispatch 函数
         dispatch(new CloseOrder($order, config('app.order_ttl')));
+
+        return $order;
+    }
+
+    public function crowdfunding(User $user, UserAddress $address, ProductSku $sku, $amount)
+    {
+        $order = \DB::transaction(function () use ($amount, $sku, $user, $address){
+            //更新地址
+
+            $address->update(['last_used_at' => Carbon::now()]);
+
+            $order = new Order([
+                'address' =>    [
+                    'address'   =>  $address->full_address,
+                    'zip'   =>  $address->zip,
+                    'contact_name'  =>  $address->contact_name,
+                    'contact_phone' =>  $address->contact_phone,
+                ],
+                'remark' => '',
+                'total_amount' => $sku->price * $amount,
+            ]);
+
+            $order->user()->associate($user);
+
+            $order->save();
+
+            $item = $order->items()->make([
+                'amount' => $amount,
+                'price' => $sku->price,
+            ]);
+            $item->product()->associate($sku->product_id);
+            $item->productSku()->associate($sku);
+            $item->save();
+
+            if ($sku->decreaseStock($amount) <= 0) {
+                throw new InvalidRequestException('该商品库存不足');
+            }
+
+            return $order;
+        });
+
+        $crowdfundingTtl = $sku->product->crowdfunding->end_at->getTimestamp() - time();
+        dispatch(new CloseOrder($order, min(config('app.order_ttl'), $crowdfundingTtl)));
 
         return $order;
     }

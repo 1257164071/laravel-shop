@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CrowdFundingOrderRequest;
 use App\Http\Requests\SendReviewRequest;
 use App\Exceptions\InvalidRequestException;
 use App\Http\Requests\OrderRequest;
+use App\Models\ProductSku;
 use App\Models\UserAddress;
 use App\Models\Order;
 use Illuminate\Http\Request;
@@ -31,7 +33,7 @@ class OrdersController extends Controller
     public function show(Order $order, Request $request)
     {
         $this->authorize('own', $order);
-        
+
         return view('orders.show', ['order' => $order->load(['items.productSku', 'items.product'])]);
     }
 
@@ -40,7 +42,7 @@ class OrdersController extends Controller
         $user    = $request->user();
         $address = UserAddress::find($request->input('address_id'));
         $coupon  = null;
-        
+
         // 如果用户提交了优惠码
         if ($code = $request->input('coupon_code')) {
             $coupon = CouponCode::where('code', $code)->first();
@@ -79,7 +81,7 @@ class OrdersController extends Controller
         // 使用 load 方法加载关联数据，避免 N + 1 性能问题
         return view('orders.review', ['order' => $order->load(['items.productSku', 'items.product'])]);
     }
-    
+
     public function sendReview(Order $order, SendReviewRequest $request)
     {
         // 校验权限
@@ -107,7 +109,7 @@ class OrdersController extends Controller
             // 将订单标记为已评价
             $order->update(['reviewed' => true]);
             event(new OrderReviewd($order));
-        });    
+        });
 
         return redirect()->back();
     }
@@ -134,5 +136,16 @@ class OrdersController extends Controller
         ]);
 
         return $order;
+    }
+
+    public function crowdfunding(CrowdFundingOrderRequest $request, OrderService $orderService)
+    {
+        $user = $request->user();
+        $sku = ProductSku::find($request->input('sku_id'));
+        $address = UserAddress::find($request->input('address_id'));
+        $amount = $request->input('amount');
+
+        return $orderService->crowdfunding($user, $address, $sku, $amount);
+
     }
 }
