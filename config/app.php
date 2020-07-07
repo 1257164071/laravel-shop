@@ -230,4 +230,5 @@ return [
     ],
 
     'order_ttl' => 1800,
+    'seckill_order_ttl' => 600,
 ];
