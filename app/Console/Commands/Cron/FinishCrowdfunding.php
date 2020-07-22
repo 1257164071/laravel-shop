@@ -68,7 +68,7 @@ class FinishCrowdfunding extends Command
         $crowdfunding->update([
             'status' => CrowdfundingProduct::STATUS_FAIL,
         ]);
-        dispatch(new RefundCrowdfundingOrders($crowdfunding));
+        dispatch(new RefundCrowdfundingOrders(``));
     }
 
 

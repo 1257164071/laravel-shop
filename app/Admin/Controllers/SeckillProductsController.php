@@ -2,6 +2,7 @@
 namespace App\Admin\Controllers;
 
 use App\Models\Product;
+use App\Models\ProductSku;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
 
@@ -30,5 +31,24 @@ class SeckillProductsController extends CommonProductsController
         // 秒杀相关字段
         $form->datetime('seckill.start_at', '秒杀开始时间')->rules('required|date');
         $form->datetime('seckill.end_at', '秒杀结束时间')->rules('required|date');
+
+
+        $form->saved(function (Form $form) {
+            $product = $form->model();
+
+            $product->load(['seckill']);
+
+            $diff = $product->seckill->end_at->getTimestamp() - time();
+
+            $product->skus->each(function (ProductSku $sku) use ($diff, $product) {
+                if ($product->on_sale && $diff > 0) {
+                    \Redis::setex('seckill_sku_'. $sku->id, $diff, $sku->stock);
+                } else {
+                    \Redis::del('seckill_sku'.$sku->id);
+                }
+
+            });
+        });
+
     }
 }

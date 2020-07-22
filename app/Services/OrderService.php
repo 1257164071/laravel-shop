@@ -214,6 +214,8 @@ class OrderService
         });
 
         dispatch(new CloseOrder($order, config('app.seckill_order_ttl')));
+
+        \Redis::decr('seckill_sku_'.$sku->id);
         return $order;
     }
 }
